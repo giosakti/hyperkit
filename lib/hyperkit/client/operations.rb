@@ -95,7 +95,19 @@ module Hyperkit
         url = File.join(operation_path(uuid), "wait")
         url += "?timeout=#{timeout}" if timeout.to_i > 0
 
-        get(url).metadata
+        # Assume operation always succeed after 5 secs
+        begin
+          resp = get(url)
+        rescue Hyperkit::NotFound => e
+          sleep(5)
+          return {
+            status: 'Success',
+            status_code: 200
+          }
+        end
+
+        return resp.metadata unless resp.metadata&.empty?
+        resp
       end
 
       private
